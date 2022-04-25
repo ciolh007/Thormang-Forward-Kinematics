@@ -1,0 +1,2928 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <title>Thormang Forward Kinematics</title>
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/ntnuerc.css">
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+        <script src="https://daybrush.com/scenejs/release/latest/dist/scene.min.js"></script>
+		
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+        <script src="js/ntnu.js"></script>
+    </head>
+    <body>
+        <div class="reveal">
+        <div class="slides">
+            
+<section id="first" data-state="first">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1> Thormang Forward Kinematics</h1>
+
+   <div class="author" style="text-align:center;">
+    
+<p>
+      Jacky Baltes<br>
+      National Taiwan Normal University<br>
+      Taipei, Taiwan<br>
+      <a href="mailto:jacky.baltes@ntnu.edu.tw">jacky.baltes@ntnu.edu.tw</a><br>
+</p>
+
+   </div>
+   <div class="date">
+    25 April 2022
+   </div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-8efac9fa-1544-4b28-8ed4-2dd79585027d" ><span id="id-8efac9fa-1544-4b28-8ed4-2dd79585027d"><img id="img-id-8efac9fa-1544-4b28-8ed4-2dd79585027d"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-b9062622-050c-4305-8b73-7528b2a31417" ><span id="id-b9062622-050c-4305-8b73-7528b2a31417"><img id="img-id-b9062622-050c-4305-8b73-7528b2a31417" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00003_frag_00001" data-state="slide_00003_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># These libraries provide us with the most often used features</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.patches</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">mpatches</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">math</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">random</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-ba9945b1-a71f-427e-b514-b1d516eb4a1d" ><span id="id-ba9945b1-a71f-427e-b514-b1d516eb4a1d"><img id="img-id-ba9945b1-a71f-427e-b514-b1d516eb4a1d"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-3cf3f894-ba62-4842-97c4-66ded3a7e5a1" ><span id="id-3cf3f894-ba62-4842-97c4-66ded3a7e5a1"><img id="img-id-3cf3f894-ba62-4842-97c4-66ded3a7e5a1" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00004_frag_00001" data-state="slide_00004_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<span id="id-34e75415-079e-48d2-8bd9-b42180d6c161" ><span id="id-34e75415-079e-48d2-8bd9-b42180d6c161"><img id="img-id-34e75415-079e-48d2-8bd9-b42180d6c161"     src="assets/images/thor1.jpg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-96c98c6c-b904-48f2-b069-6bc48ae383bf" ><span id="id-96c98c6c-b904-48f2-b069-6bc48ae383bf"><img id="img-id-96c98c6c-b904-48f2-b069-6bc48ae383bf"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-de6b1a89-0bfe-4ccf-a219-2403776a20d8" ><span id="id-de6b1a89-0bfe-4ccf-a219-2403776a20d8"><img id="img-id-de6b1a89-0bfe-4ccf-a219-2403776a20d8" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00005_frag_00001" data-state="slide_00005_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>thormang_height <span style="color: #666666">=</span> <span style="color: #666666">1.375</span> <span style="color: #408080; font-style: italic"># m </span>
+thormang_width <span style="color: #666666">=</span> <span style="color: #666666">0.222</span> <span style="color: #408080; font-style: italic"># m </span>
+thormang_torso_height <span style="color: #666666">=</span> thormang_height <span style="color: #666666">-</span> <span style="color: #666666">0.425</span> <span style="color: #666666">-</span> <span style="color: #666666">0.20</span>
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-12d78b73-7a5b-4cf6-9d67-879998083567" ><span id="id-12d78b73-7a5b-4cf6-9d67-879998083567"><img id="img-id-12d78b73-7a5b-4cf6-9d67-879998083567"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-bb3389da-3e34-47be-8e83-cf7512e7286f" ><span id="id-bb3389da-3e34-47be-8e83-cf7512e7286f"><img id="img-id-bb3389da-3e34-47be-8e83-cf7512e7286f" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00006_frag_00001" data-state="slide_00006_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Assign Z Coordinate of Joint Axis </h1>
+
+<div class="jb-text">
+<ul>
+<li>Determine type and joint id for each joint: 6 Joints J1, J2, ... J6</li>
+<li>Assign Z coordinate with the axis of acutation. Shown in green.</li>
+</ul>
+</div>
+<span id="id-a45d86b4-2d12-4ec7-8c07-a2acece911ba" ><span id="id-a45d86b4-2d12-4ec7-8c07-a2acece911ba"><img id="img-id-a45d86b4-2d12-4ec7-8c07-a2acece911ba"     src="assets/images/thor2.png"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-6e59cdff-0562-413d-8b89-42dddb2c58f4" ><span id="id-6e59cdff-0562-413d-8b89-42dddb2c58f4"><img id="img-id-6e59cdff-0562-413d-8b89-42dddb2c58f4"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-839c176e-f7af-43a5-b7c9-c7bd6f22d445" ><span id="id-839c176e-f7af-43a5-b7c9-c7bd6f22d445"><img id="img-id-839c176e-f7af-43a5-b7c9-c7bd6f22d445" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00007_frag_00001" data-state="slide_00007_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Assign Z Coordinate of Joint Axis </h1>
+
+<table>
+<tr>
+<td>
+<div class="jb-text">
+<ul>
+<li>Determine type and joint id for each joint: 6 Joints J1, J2, ... J6</li>
+<li>Assign Z coordinate with the axis of acutation. Shown in green.</li>
+</ul>
+</div>
+</td>
+<td>
+<span id="id-9bb814f8-f03c-4d69-9f3a-c926e03cf1fb" ><span id="id-9bb814f8-f03c-4d69-9f3a-c926e03cf1fb"><img id="img-id-9bb814f8-f03c-4d69-9f3a-c926e03cf1fb"     src="assets/images/thor2.png"/></span>
+</span>
+
+</td>
+</tr>
+</table>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-28b72d41-2c9b-43df-9bcf-05527da8eb64" ><span id="id-28b72d41-2c9b-43df-9bcf-05527da8eb64"><img id="img-id-28b72d41-2c9b-43df-9bcf-05527da8eb64"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-dc630566-bfd5-42c0-b6f0-3e4d0d997840" ><span id="id-dc630566-bfd5-42c0-b6f0-3e4d0d997840"><img id="img-id-dc630566-bfd5-42c0-b6f0-3e4d0d997840" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00008_frag_00001" data-state="slide_00008_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Assign Z Coordinate of Joint Axis </h1>
+
+<table>
+<tr>
+<td>
+<div class="jb-text">
+<ul>
+<li>Determine type and joint id for each joint: 6 Joints J1, J2, ... J6</li>
+<li>Assign Z coordinate with the axis of acutation. Shown in green.</li>
+</ul>
+</div>
+</td>
+<td>
+<span id="id-46fe7bbd-f4cb-4bde-8281-89f3dea0b8e4" ><span id="id-46fe7bbd-f4cb-4bde-8281-89f3dea0b8e4"><img id="img-id-46fe7bbd-f4cb-4bde-8281-89f3dea0b8e4"     src="assets/images/thor2.png"/></span>
+</span>
+
+</td>
+</tr>
+</table>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-b3e2baac-8a52-4c43-9a1f-a59304a854d9" ><span id="id-b3e2baac-8a52-4c43-9a1f-a59304a854d9"><img id="img-id-b3e2baac-8a52-4c43-9a1f-a59304a854d9"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-6a2f8eca-b0c3-415b-b9ca-9481ac8234e5" ><span id="id-6a2f8eca-b0c3-415b-b9ca-9481ac8234e5"><img id="img-id-6a2f8eca-b0c3-415b-b9ca-9481ac8234e5" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00009_frag_00001" data-state="slide_00009_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Assign Z Coordinate of Joint Axis </h1>
+
+<table>
+<tr>
+<td>
+<div class="jb-text" style="font-size:0.5em">
+<ul>
+<li>Determine type and joint id for each joint: 6 Joints J1, J2, ... J6</li>
+<li>Assign Z coordinate with the axis of acutation. Shown in green.</li>
+</ul>
+</div>
+</td>
+<td>
+<span id="id-acbfde70-cb0a-434f-b315-fcbf6e9ff9a5" ><span id="id-acbfde70-cb0a-434f-b315-fcbf6e9ff9a5"><img id="img-id-acbfde70-cb0a-434f-b315-fcbf6e9ff9a5"     src="assets/images/thor2.png"/></span>
+</span>
+
+</td>
+</tr>
+</table>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-8ef1aab6-f086-46a7-a9f7-5bcf3de266b8" ><span id="id-8ef1aab6-f086-46a7-a9f7-5bcf3de266b8"><img id="img-id-8ef1aab6-f086-46a7-a9f7-5bcf3de266b8"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-205ff0c3-1979-4b97-8791-6e864dd9a0d1" ><span id="id-205ff0c3-1979-4b97-8791-6e864dd9a0d1"><img id="img-id-205ff0c3-1979-4b97-8791-6e864dd9a0d1" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00010_frag_00001" data-state="slide_00010_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Assign Z Coordinate of Joint Axis </h1>
+
+<table>
+<tr>
+<td style="width:30%">
+<div class="jb-text" style="font-size:0.5em">
+<ul>
+<li>Determine type and joint id for each joint: 6 Joints J1, J2, ... J6</li>
+<li>Assign Z coordinate with the axis of acutation. Shown in green.</li>
+</ul>
+</div>
+</td>
+<td>
+<span id="id-5d0c9929-17ed-46be-ba3f-68615e663106" ><span id="id-5d0c9929-17ed-46be-ba3f-68615e663106"><img id="img-id-5d0c9929-17ed-46be-ba3f-68615e663106"     src="assets/images/thor2.png"/></span>
+</span>
+
+</td>
+</tr>
+</table>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-d4709999-0268-476b-bde1-28b64e6b4284" ><span id="id-d4709999-0268-476b-bde1-28b64e6b4284"><img id="img-id-d4709999-0268-476b-bde1-28b64e6b4284"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-2a20eda3-5e98-4d60-9462-256dc2b1a5c4" ><span id="id-2a20eda3-5e98-4d60-9462-256dc2b1a5c4"><img id="img-id-2a20eda3-5e98-4d60-9462-256dc2b1a5c4" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00011_frag_00001" data-state="slide_00011_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+<div class="document" id="world-coordinate-inertial-frame">
+<h1 class="title">World Coordinate (Inertial) Frame</h1>
+<div class="jb-text assigned to center of robot shown in red docutils container">
+<p>We must determine the orientation of the world coordinates.</p>
+<p>I propose Z is up, X is forward, so Y is to the left of the robot.</p>
+</div>
+</div>
+
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-c81458ba-ec86-493c-bb58-f61a607dfc4d" ><span id="id-c81458ba-ec86-493c-bb58-f61a607dfc4d"><img id="img-id-c81458ba-ec86-493c-bb58-f61a607dfc4d"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-7e9072b5-f8cb-4510-9833-f776836c4c3c" ><span id="id-7e9072b5-f8cb-4510-9833-f776836c4c3c"><img id="img-id-7e9072b5-f8cb-4510-9833-f776836c4c3c" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00012_frag_00001" data-state="slide_00012_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #666666">%</span>matplotlib notebook
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">6</span>,<span style="color: #666666">6</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">2.0</span>, <span style="color: #666666">2.0</span> )
+
+fig1<span style="color: #666666">=</span>addJBFigure(<span style="color: #BA2121">&quot;fig1&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig );
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div id='5ffe3f4e-f8b1-416d-ab7b-ef8904171bd7'></div>
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-3f989fc2-c949-4338-9279-b80bbd6701c9" ><span id="id-3f989fc2-c949-4338-9279-b80bbd6701c9"><img id="img-id-3f989fc2-c949-4338-9279-b80bbd6701c9"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-5fed3cea-c39e-4f54-81a1-0270ae1f077b" ><span id="id-5fed3cea-c39e-4f54-81a1-0270ae1f077b"><img id="img-id-5fed3cea-c39e-4f54-81a1-0270ae1f077b" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00013_frag_00001" data-state="slide_00013_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Inertial Frame</h1>
+
+    <span id="id-05d792b2-da9b-4309-9472-a9bfda73d5b5" ><span id="id-05d792b2-da9b-4309-9472-a9bfda73d5b5"><img id="img-id-05d792b2-da9b-4309-9472-a9bfda73d5b5"     src="assets/images/fig1.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-969a0a78-d55e-434f-b38f-cef23f39977b" ><span id="id-969a0a78-d55e-434f-b38f-cef23f39977b"><img id="img-id-969a0a78-d55e-434f-b38f-cef23f39977b"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-eabff8f2-9558-405f-b4e5-84f1538fe73b" ><span id="id-eabff8f2-9558-405f-b4e5-84f1538fe73b"><img id="img-id-eabff8f2-9558-405f-b4e5-84f1538fe73b" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00014_frag_00001" data-state="slide_00014_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+left_shoulder_translation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+left_shoulder_rotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+A_0_1 <span style="color: #666666">=</span> left_shoulder_translation<span style="color: #666666">.</span>dot( left_shoulder_rotation )
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, A_0_1 )
+
+fig2 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig2&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+plt<span style="color: #666666">.</span>close()
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div id='fd3357b7-373d-42f4-a35f-1466e373c8f4'></div>
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-d4a404f5-6b57-4ebd-8bd6-3c4c18b84d5c" ><span id="id-d4a404f5-6b57-4ebd-8bd6-3c4c18b84d5c"><img id="img-id-d4a404f5-6b57-4ebd-8bd6-3c4c18b84d5c"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-f21152b4-0bf1-4790-9368-dff0dfdd23b5" ><span id="id-f21152b4-0bf1-4790-9368-dff0dfdd23b5"><img id="img-id-f21152b4-0bf1-4790-9368-dff0dfdd23b5" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00015_frag_00001" data-state="slide_00015_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Left Shoulder (Lateral)</h1>
+
+    <span id="id-fbcfd282-80b0-4a37-b63d-978768d12241" ><span id="id-fbcfd282-80b0-4a37-b63d-978768d12241"><img id="img-id-fbcfd282-80b0-4a37-b63d-978768d12241"     src="assets/images/fig2.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-c5d2c068-964e-480d-9354-2d399ff2f6f2" ><span id="id-c5d2c068-964e-480d-9354-2d399ff2f6f2"><img id="img-id-c5d2c068-964e-480d-9354-2d399ff2f6f2"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-b0493322-e011-44cd-86c5-90fa29abfa33" ><span id="id-b0493322-e011-44cd-86c5-90fa29abfa33"><img id="img-id-b0493322-e011-44cd-86c5-90fa29abfa33" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00016_frag_00001" data-state="slide_00016_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+<div class="document" id="joint-2-left-shoulder-frontal">
+<h1 class="title">Joint 2: Left Shoulder (Frontal)</h1>
+<div class="jb-text docutils container">
+<p>Joint 2 is rotating in the frontal plane</p>
+<p>Distance along Z axis of Joint 1 is 10.0cm, distance along X is 5.0 cm</p>
+</div>
+</div>
+
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-b49b7117-2f71-49e2-a8a3-68f3fdc674fe" ><span id="id-b49b7117-2f71-49e2-a8a3-68f3fdc674fe"><img id="img-id-b49b7117-2f71-49e2-a8a3-68f3fdc674fe"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-af39ad5d-7cbe-4c4e-bced-a1cadb745dda" ><span id="id-af39ad5d-7cbe-4c4e-bced-a1cadb745dda"><img id="img-id-af39ad5d-7cbe-4c4e-bced-a1cadb745dda" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00017_frag_00001" data-state="slide_00017_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #666666">%</span>matplotlib notebook 
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+left_shoulder_translation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+left_shoulder_rotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+A_0_1 <span style="color: #666666">=</span> left_shoulder_translation<span style="color: #666666">.</span>dot( left_shoulder_rotation )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, A_0_1 )
+
+A_1_2 <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+A_0_2 <span style="color: #666666">=</span> A_0_1<span style="color: #666666">.</span>dot(A_1_2)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, A_0_2 )
+
+
+fig3 <span style="color: #666666">=</span> addJBFigure( <span style="color: #BA2121">&quot;fig3&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+jbg<span style="color: #666666">.</span>draw_link(ax, A_0_1, A_0_2, width<span style="color: #666666">=25</span> )
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+<div class="jb-print jb-render">
+<div class="jb-output jb-render code" style="text-align:center">
+<div class="jb-stdout code" style="display:inline-block; width:90%">
+<pre >
+x1 [0.    0.225 0.4   1.   ] x2 [3.061617e-18 3.250000e-01 3.500000e-01 1.000000e+00] c [[0.000000e+00 3.061617e-18]
+ [2.250000e-01 3.250000e-01]
+ [4.000000e-01 3.500000e-01]
+ [1.000000e+00 1.000000e+00]]
+</pre>
+</div>
+</div>
+
+</div><!-- end of jb-print jb-render -->
+
+<div class="jb-output-code jb-render">
+<div id='57432eb9-ff18-48e7-ad65-3f54494dc525'></div>
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-6f3a0a59-c117-4c65-a8bd-e5aaa5c9a99e" ><span id="id-6f3a0a59-c117-4c65-a8bd-e5aaa5c9a99e"><img id="img-id-6f3a0a59-c117-4c65-a8bd-e5aaa5c9a99e"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-0720d2bd-3755-4e3f-8ab1-89e6f438ba22" ><span id="id-0720d2bd-3755-4e3f-8ab1-89e6f438ba22"><img id="img-id-0720d2bd-3755-4e3f-8ab1-89e6f438ba22" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00018_frag_00001" data-state="slide_00018_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Joint 3: Left Shoulder (Lateral)<h1>
+
+<span id="id-83a15591-d8dc-4f2e-9993-6906639f286f" ><span id="id-83a15591-d8dc-4f2e-9993-6906639f286f"><img id="img-id-83a15591-d8dc-4f2e-9993-6906639f286f"     src="assets/images/fig3.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-dfe4f472-f3e9-4255-87a1-ecfb04657ac9" ><span id="id-dfe4f472-f3e9-4255-87a1-ecfb04657ac9"><img id="img-id-dfe4f472-f3e9-4255-87a1-ecfb04657ac9"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-c716a858-041e-4c7e-bd08-46d171428b30" ><span id="id-c716a858-041e-4c7e-bd08-46d171428b30"><img id="img-id-c716a858-041e-4c7e-bd08-46d171428b30" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00019_frag_00001" data-state="slide_00019_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+<div class="document" id="joint-2-left-elbow-frontal">
+<h1 class="title">Joint 2: Left Elbow (Frontal)</h1>
+<div class="jb-text docutils container">
+<p>Joint 3 is rotating in the frontal plane</p>
+<p>The displacement looks like 20.0 cm to the right of the robot and 5.0 cm down.</p>
+<p>But using Denhavit Hartenberg, we can only achieve this by a rotation along Z and a translation
+along X, since translation along Z will be 0.</p>
+<p>Distance along Z axis of Joint 2 is  0.00cm, distance along X is 20.62 cm.</p>
+<p>Rotation along Z is 75.9638 degrees</p>
+</div>
+</div>
+
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-7fc5e5d8-d1eb-4466-833f-62209c816a43" ><span id="id-7fc5e5d8-d1eb-4466-833f-62209c816a43"><img id="img-id-7fc5e5d8-d1eb-4466-833f-62209c816a43"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-5681b5f6-b16a-4174-b1a0-659eff0cdec2" ><span id="id-5681b5f6-b16a-4174-b1a0-659eff0cdec2"><img id="img-id-5681b5f6-b16a-4174-b1a0-659eff0cdec2" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00020_frag_00001" data-state="slide_00020_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #666666">%</span>matplot inline
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotateX( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+fig4 <span style="color: #666666">=</span> addJBFigure( <span style="color: #BA2121">&quot;fig4&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-dd86eda5-e245-44d1-bc84-f29bfb9a64dc" ><span id="id-dd86eda5-e245-44d1-bc84-f29bfb9a64dc"><img id="img-id-dd86eda5-e245-44d1-bc84-f29bfb9a64dc"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-d1a47acc-9961-4607-9a33-57e3121d4cff" ><span id="id-d1a47acc-9961-4607-9a33-57e3121d4cff"><img id="img-id-d1a47acc-9961-4607-9a33-57e3121d4cff" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00021_frag_00001" data-state="slide_00021_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Joint 4</span>
+j4_d <span style="color: #666666">=</span> <span style="color: #666666">0.22</span>
+j4_a <span style="color: #666666">=</span> <span style="color: #666666">-0.05</span>
+
+<span style="color: #408080; font-style: italic"># Convert into one translation along the X axis</span>
+j4_dp <span style="color: #666666">=</span> <span style="color: #666666">0.0</span>
+j4_ap <span style="color: #666666">=</span> math<span style="color: #666666">.</span>hypot( j4_d, j4_a)
+j4_theta <span style="color: #666666">=</span> math<span style="color: #666666">.</span>atan2( j3_a, j3_d ) <span style="color: #666666">+</span> math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d )
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-c508a848-742c-4e3d-96a0-8c4ebbcccae2" ><span id="id-c508a848-742c-4e3d-96a0-8c4ebbcccae2"><img id="img-id-c508a848-742c-4e3d-96a0-8c4ebbcccae2"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-216f88da-2889-4086-b792-e257a62f7404" ><span id="id-216f88da-2889-4086-b792-e257a62f7404"><img id="img-id-216f88da-2889-4086-b792-e257a62f7404" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00022_frag_00001" data-state="slide_00022_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #666666">%</span>matplotlib notebook
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotateX( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotateY(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotateX( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plotCoordinateSystem( ax, 0.15, 2.0, j4Ad )</span>
+
+fig5 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig5&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='69c5b6a3-348f-49f9-a116-0d0f210e56c0'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-6adab6c8-0edf-43ed-aa01-1a0aecb919fd" ><span id="id-6adab6c8-0edf-43ed-aa01-1a0aecb919fd"><img id="img-id-6adab6c8-0edf-43ed-aa01-1a0aecb919fd"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-c7cf0116-88ef-4673-83a9-cedd4faef255" ><span id="id-c7cf0116-88ef-4673-83a9-cedd4faef255"><img id="img-id-c7cf0116-88ef-4673-83a9-cedd4faef255" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00023_frag_00001" data-state="slide_00023_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #666666">%</span>matplotlib notebook
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotateX( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plotCoorplot_coordinate_systemdinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotateY(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotateX( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plot_coordinate_system( ax, 0.15, 2.0, j4Ad )</span>
+
+fig5 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig5&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='2c452439-b301-485f-8f32-a1945ae1fea4'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-e3e6f57a-b266-465a-bb15-66fe1a270064" ><span id="id-e3e6f57a-b266-465a-bb15-66fe1a270064"><img id="img-id-e3e6f57a-b266-465a-bb15-66fe1a270064"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-5a04efb0-ff90-4ae9-ae9c-de732cd91427" ><span id="id-5a04efb0-ff90-4ae9-ae9c-de732cd91427"><img id="img-id-5a04efb0-ff90-4ae9-ae9c-de732cd91427" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00024_frag_00001" data-state="slide_00024_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #666666">%</span>matplotlib notebook
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plotCoorplot_coordinate_systemdinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_y(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_x( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plot_coordinate_system( ax, 0.15, 2.0, j4Ad )</span>
+
+fig5 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig5&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='2d6540a5-0721-4ca2-963a-fa1b68c89c3c'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-1b63266f-8fd3-496e-95a4-9e6c9577e15d" ><span id="id-1b63266f-8fd3-496e-95a4-9e6c9577e15d"><img id="img-id-1b63266f-8fd3-496e-95a4-9e6c9577e15d"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-9d44a00e-9748-4706-a3cb-b8441bba620c" ><span id="id-9d44a00e-9748-4706-a3cb-b8441bba620c"><img id="img-id-9d44a00e-9748-4706-a3cb-b8441bba620c" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00025_frag_00001" data-state="slide_00025_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #666666">%</span>matplotlib notebook
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plotCoorplot_coordinate_systemdinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_y(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_x( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plot_coordinate_system( ax, 0.15, 2.0, j4Ad )</span>
+
+fig5 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig5&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='3e96d41d-3ddc-4f1a-a14a-759216c456dd'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-f2bef5f4-cb3f-4b8b-9d05-314b2228abe1" ><span id="id-f2bef5f4-cb3f-4b8b-9d05-314b2228abe1"><img id="img-id-f2bef5f4-cb3f-4b8b-9d05-314b2228abe1"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-17ad0679-da88-446b-bfec-24a92b0b1a88" ><span id="id-17ad0679-da88-446b-bfec-24a92b0b1a88"><img id="img-id-17ad0679-da88-446b-bfec-24a92b0b1a88" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00026_frag_00001" data-state="slide_00026_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #666666">%</span>matplotlib notebook
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_y(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_x( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plot_coordinate_system( ax, 0.15, 2.0, j4Ad )</span>
+
+fig5 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig5&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='22ad020a-ec71-4588-9015-6974e14b85f5'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-c31d43f5-6267-433e-97eb-6eaa531b69f0" ><span id="id-c31d43f5-6267-433e-97eb-6eaa531b69f0"><img id="img-id-c31d43f5-6267-433e-97eb-6eaa531b69f0"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-b01580f1-2920-4713-a498-e21a5b71d88d" ><span id="id-b01580f1-2920-4713-a498-e21a5b71d88d"><img id="img-id-b01580f1-2920-4713-a498-e21a5b71d88d" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00027_frag_00001" data-state="slide_00027_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<span id="id-987785e3-7c93-417d-88f0-0f735a9ab732" ><span id="id-987785e3-7c93-417d-88f0-0f735a9ab732"><img id="img-id-987785e3-7c93-417d-88f0-0f735a9ab732"     src="assets/images/fig5.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-a00437c2-48af-48b7-9440-09650c2766bc" ><span id="id-a00437c2-48af-48b7-9440-09650c2766bc"><img id="img-id-a00437c2-48af-48b7-9440-09650c2766bc"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-5b1bc45f-c8e5-4ac4-afef-4d13ce26c6e8" ><span id="id-5b1bc45f-c8e5-4ac4-afef-4d13ce26c6e8"><img id="img-id-5b1bc45f-c8e5-4ac4-afef-4d13ce26c6e8" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00028_frag_00001" data-state="slide_00028_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+<div class="document" id="joint-5-left-wrist-frontal">
+<h1 class="title">Joint 5: Left Wrist (Frontal)</h1>
+<div class="jb-text docutils container">
+<p>Joint 5 axis of actuation intersects with Joint 4 axis of actuation (Z-axis)</p>
+<p>Joint 4 must displace by  7.00 cm in the Z axis</p>
+</div>
+</div>
+
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-994661b4-0960-4b63-aa69-5ac3c8b2a156" ><span id="id-994661b4-0960-4b63-aa69-5ac3c8b2a156"><img id="img-id-994661b4-0960-4b63-aa69-5ac3c8b2a156"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-978846a8-440a-4301-a453-5d6672a83066" ><span id="id-978846a8-440a-4301-a453-5d6672a83066"><img id="img-id-978846a8-440a-4301-a453-5d6672a83066" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00029_frag_00001" data-state="slide_00029_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_y(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_x( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plot_coordinate_system( ax, 0.15, 2.0, j4Ad )</span>
+
+j5T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90/180.0*</span>math<span style="color: #666666">.</span>pi, j5_d, <span style="color: #666666">0</span>, <span style="color: #666666">-90.0/180.0*</span>math<span style="color: #666666">.</span>pi )
+j5A <span style="color: #666666">=</span> j4A<span style="color: #666666">.</span>dot( j5T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">3.0</span>, j5A )
+
+j6T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">-90/180.0*</span>math<span style="color: #666666">.</span>pi, <span style="color: #666666">0</span>, j6_d, <span style="color: #666666">0</span> )
+j6A <span style="color: #666666">=</span> j5A<span style="color: #666666">.</span>dot( j6T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">5.0</span>, j6A )
+
+fig7 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig7&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='e2f921f7-a5d6-42ec-873a-6167652ff303'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-df0a1294-e31c-41fa-b43e-8ecd0cff81a0" ><span id="id-df0a1294-e31c-41fa-b43e-8ecd0cff81a0"><img id="img-id-df0a1294-e31c-41fa-b43e-8ecd0cff81a0"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-32f3b8cd-a931-4079-a899-1569a3da896c" ><span id="id-32f3b8cd-a931-4079-a899-1569a3da896c"><img id="img-id-32f3b8cd-a931-4079-a899-1569a3da896c" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00030_frag_00001" data-state="slide_00030_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_y(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_x( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plot_coordinate_system( ax, 0.15, 2.0, j4Ad )</span>
+
+j5T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90/180.0*</span>math<span style="color: #666666">.</span>pi, j5_d, <span style="color: #666666">0</span>, <span style="color: #666666">-90.0/180.0*</span>math<span style="color: #666666">.</span>pi )
+j5A <span style="color: #666666">=</span> j4A<span style="color: #666666">.</span>dot( j5T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">3.0</span>, j5A )
+
+j6T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">-90/180.0*</span>math<span style="color: #666666">.</span>pi, <span style="color: #666666">0</span>, j6_d, <span style="color: #666666">0</span> )
+j6A <span style="color: #666666">=</span> j5A<span style="color: #666666">.</span>dot( j6T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">5.0</span>, j6A )
+
+fig7 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig7&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='d9efe88b-7e48-44cf-b159-2c0155944f0c'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-e513b489-82dd-421e-83bc-392c973cc0b3" ><span id="id-e513b489-82dd-421e-83bc-392c973cc0b3"><img id="img-id-e513b489-82dd-421e-83bc-392c973cc0b3"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-5cc73578-912f-4428-bdd1-d8f4e7aa7809" ><span id="id-5cc73578-912f-4428-bdd1-d8f4e7aa7809"><img id="img-id-5cc73578-912f-4428-bdd1-d8f4e7aa7809" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00031_frag_00001" data-state="slide_00031_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_y(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_x( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plot_coordinate_system( ax, 0.15, 2.0, j4Ad )</span>
+
+j5T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90/180.0*</span>math<span style="color: #666666">.</span>pi, j5_d, <span style="color: #666666">0</span>, <span style="color: #666666">-90.0/180.0*</span>math<span style="color: #666666">.</span>pi )
+j5A <span style="color: #666666">=</span> j4A<span style="color: #666666">.</span>dot( j5T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">3.0</span>, j5A )
+
+j6T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">-90/180.0*</span>math<span style="color: #666666">.</span>pi, <span style="color: #666666">0</span>, j6_d, <span style="color: #666666">0</span> )
+j6A <span style="color: #666666">=</span> j5A<span style="color: #666666">.</span>dot( j6T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">5.0</span>, j6A )
+
+fig7 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig7&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='ad01d67a-b112-46bc-8d64-8f15a89d1ace'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-72d47dce-ee9b-4ed4-b416-efe538c160a8" ><span id="id-72d47dce-ee9b-4ed4-b416-efe538c160a8"><img id="img-id-72d47dce-ee9b-4ed4-b416-efe538c160a8"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-cd7ced79-2796-4b38-a6a4-7effaa724510" ><span id="id-cd7ced79-2796-4b38-a6a4-7effaa724510"><img id="img-id-cd7ced79-2796-4b38-a6a4-7effaa724510" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00032_frag_00001" data-state="slide_00032_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_y(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_x( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plot_coordinate_system( ax, 0.15, 2.0, j4Ad )</span>
+
+j5T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90/180.0*</span>math<span style="color: #666666">.</span>pi, j5_d, <span style="color: #666666">0</span>, <span style="color: #666666">-90.0/180.0*</span>math<span style="color: #666666">.</span>pi )
+j5A <span style="color: #666666">=</span> j4A<span style="color: #666666">.</span>dot( j5T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">3.0</span>, j5A )
+
+j6T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">-90/180.0*</span>math<span style="color: #666666">.</span>pi, <span style="color: #666666">0</span>, j6_d, <span style="color: #666666">0</span> )
+j6A <span style="color: #666666">=</span> j5A<span style="color: #666666">.</span>dot( j6T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">5.0</span>, j6A )
+
+fig7 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig7&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='eabb3bca-85f7-4710-9bf2-693977b9140a'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-7707a349-37dc-41ec-acaa-62961fb2f81b" ><span id="id-7707a349-37dc-41ec-acaa-62961fb2f81b"><img id="img-id-7707a349-37dc-41ec-acaa-62961fb2f81b"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-825831aa-3bab-4a6b-8199-ff3fd877168f" ><span id="id-825831aa-3bab-4a6b-8199-ff3fd877168f"><img id="img-id-825831aa-3bab-4a6b-8199-ff3fd877168f" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00033_frag_00001" data-state="slide_00033_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_y(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_x( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plot_coordinate_system( ax, 0.15, 2.0, j4Ad )</span>
+
+j5T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90/180.0*</span>math<span style="color: #666666">.</span>pi, j5_d, <span style="color: #666666">0</span>, <span style="color: #666666">-90.0/180.0*</span>math<span style="color: #666666">.</span>pi )
+j5A <span style="color: #666666">=</span> j4A<span style="color: #666666">.</span>dot( j5T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">3.0</span>, j5A )
+
+j6T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">-90/180.0*</span>math<span style="color: #666666">.</span>pi, <span style="color: #666666">0</span>, j6_d, <span style="color: #666666">0</span> )
+j6A <span style="color: #666666">=</span> j5A<span style="color: #666666">.</span>dot( j6T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">5.0</span>, j6A )
+
+fig7 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig7&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='ace0111e-3e51-4655-9225-a764c82ca525'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-a4b80b38-ef4e-436a-806e-c4d359e723e7" ><span id="id-a4b80b38-ef4e-436a-806e-c4d359e723e7"><img id="img-id-a4b80b38-ef4e-436a-806e-c4d359e723e7"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-c7c3a068-17f8-42f5-9bad-f2ac6548fd49" ><span id="id-c7c3a068-17f8-42f5-9bad-f2ac6548fd49"><img id="img-id-c7c3a068-17f8-42f5-9bad-f2ac6548fd49" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00034_frag_00001" data-state="slide_00034_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Gripper</span>
+
+j6_d <span style="color: #666666">=</span> <span style="color: #666666">0.1</span>
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-f4e2fe8d-5760-43a8-a7ce-814705136b86" ><span id="id-f4e2fe8d-5760-43a8-a7ce-814705136b86"><img id="img-id-f4e2fe8d-5760-43a8-a7ce-814705136b86"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-a306cd77-4082-444c-94ab-58e50966d70b" ><span id="id-a306cd77-4082-444c-94ab-58e50966d70b"><img id="img-id-a306cd77-4082-444c-94ab-58e50966d70b" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00035_frag_00001" data-state="slide_00035_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta, j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_y(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_x( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plot_coordinate_system( ax, 0.15, 2.0, j4Ad )</span>
+
+j5T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90/180.0*</span>math<span style="color: #666666">.</span>pi, j5_d, <span style="color: #666666">0</span>, <span style="color: #666666">-90.0/180.0*</span>math<span style="color: #666666">.</span>pi )
+j5A <span style="color: #666666">=</span> j4A<span style="color: #666666">.</span>dot( j5T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">3.0</span>, j5A )
+
+j6T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">-90/180.0*</span>math<span style="color: #666666">.</span>pi, <span style="color: #666666">0</span>, j6_d, <span style="color: #666666">0</span> )
+j6A <span style="color: #666666">=</span> j5A<span style="color: #666666">.</span>dot( j6T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">5.0</span>, j6A )
+
+fig7 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;fig7&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='a4249a18-14c9-4615-97bc-bc5757c49563'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-553baee3-3f22-47ec-9a86-e56b8b2e65a0" ><span id="id-553baee3-3f22-47ec-9a86-e56b8b2e65a0"><img id="img-id-553baee3-3f22-47ec-9a86-e56b8b2e65a0"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-8bd3fc67-de8e-423f-bfad-4b1e1c2f17c4" ><span id="id-8bd3fc67-de8e-423f-bfad-4b1e1c2f17c4"><img id="img-id-8bd3fc67-de8e-423f-bfad-4b1e1c2f17c4" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00036_frag_00001" data-state="slide_00036_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<span id="id-9fa158d3-21d2-45aa-95c8-b56da4137123" ><span id="id-9fa158d3-21d2-45aa-95c8-b56da4137123"><img id="img-id-9fa158d3-21d2-45aa-95c8-b56da4137123"     src="assets/images/fig7.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-75ba4ca6-71a4-43a5-aeca-58270afb3234" ><span id="id-75ba4ca6-71a4-43a5-aeca-58270afb3234"><img id="img-id-75ba4ca6-71a4-43a5-aeca-58270afb3234"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-14d88bcb-b290-4495-a987-a8274a38238b" ><span id="id-14d88bcb-b290-4495-a987-a8274a38238b"><img id="img-id-14d88bcb-b290-4495-a987-a8274a38238b" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00037_frag_00001" data-state="slide_00037_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #666666">%</span>matplotlib notebook
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+thetas <span style="color: #666666">=</span> [ <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi, <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, <span style="color: #666666">0.0/180.0*</span>math<span style="color: #666666">.</span>pi, <span style="color: #666666">0.0</span>, <span style="color: #666666">0.0</span>, <span style="color: #666666">0.0</span> ]
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotateX( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotateZ(thetas[<span style="color: #666666">0</span>]))
+
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi <span style="color: #666666">+</span> thetas[<span style="color: #666666">1</span>], j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta <span style="color: #666666">+</span> thetas[<span style="color: #666666">2</span>], j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta <span style="color: #666666">+</span> thetas[<span style="color: #666666">3</span>], j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotateY(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotateX( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plotCoordinateSystem( ax, 0.15, 2.0, j4Ad )</span>
+
+j5T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90/180.0*</span>math<span style="color: #666666">.</span>pi <span style="color: #666666">+</span> thetas[<span style="color: #666666">4</span>], j5_d, <span style="color: #666666">0</span>, <span style="color: #666666">-90.0/180.0*</span>math<span style="color: #666666">.</span>pi )
+j5A <span style="color: #666666">=</span> j4A<span style="color: #666666">.</span>dot( j5T )
+
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">3.0</span>, j5A )
+
+j6T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">-90/180.0*</span>math<span style="color: #666666">.</span>pi <span style="color: #666666">+</span> thetas[<span style="color: #666666">5</span>], <span style="color: #666666">0</span>, j6_d, <span style="color: #666666">0</span> )
+j6A <span style="color: #666666">=</span> j5A<span style="color: #666666">.</span>dot( j6T )
+
+jbg<span style="color: #666666">.</span>plotCoordinateSystem( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">5.0</span>, j6A )
+
+fig8<span style="color: #666666">=</span>addJBFigure(<span style="color: #BA2121">&quot;fig8&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='72ee1261-1f1a-40be-a798-8af196f2685d'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-6f5f19c2-b8b2-4554-89e9-d3de41732b68" ><span id="id-6f5f19c2-b8b2-4554-89e9-d3de41732b68"><img id="img-id-6f5f19c2-b8b2-4554-89e9-d3de41732b68"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-a186b8ba-4e7a-43ac-bbb6-c03e1e68ce3f" ><span id="id-a186b8ba-4e7a-43ac-bbb6-c03e1e68ce3f"><img id="img-id-a186b8ba-4e7a-43ac-bbb6-c03e1e68ce3f" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00038_frag_00001" data-state="slide_00038_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #666666">%</span>matplotlib notebook
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">jb_geometry</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">jbg</span>
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mpl_toolkits.mplot3d</span> <span style="color: #008000; font-weight: bold">import</span> Axes3D
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">10</span>,<span style="color: #666666">10</span>) )
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">111</span>, projection<span style="color: #666666">=</span><span style="color: #BA2121">&#39;3d&#39;</span>)
+ax<span style="color: #666666">.</span>set_xlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_ylim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+ax<span style="color: #666666">.</span>set_zlim((<span style="color: #666666">0</span>,<span style="color: #666666">1</span>))
+
+thetas <span style="color: #666666">=</span> [ <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi, <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi, <span style="color: #666666">0.0/180.0*</span>math<span style="color: #666666">.</span>pi, <span style="color: #666666">0.0</span>, <span style="color: #666666">0.0</span>, <span style="color: #666666">0.0</span> ]
+
+<span style="color: #408080; font-style: italic"># Draw the world coordinate system</span>
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.5</span>, <span style="color: #666666">3.0</span> )
+
+<span style="color: #408080; font-style: italic"># Draw the left shoulder Joint 1 (Lateral)</span>
+leftShoulderTranslation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>translate( <span style="color: #666666">0.0</span>, <span style="color: #666666">0.225</span>, <span style="color: #666666">0.40</span> )
+leftShoulderRotation <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>rotate_x( <span style="color: #666666">-90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j1A <span style="color: #666666">=</span> leftShoulderTranslation<span style="color: #666666">.</span>dot( leftShoulderRotation )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_z(thetas[<span style="color: #666666">0</span>]))
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j1A )
+
+j2T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi <span style="color: #666666">+</span> thetas[<span style="color: #666666">1</span>], j2_d, j2_a, <span style="color: #666666">90.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j2A <span style="color: #666666">=</span> j1A<span style="color: #666666">.</span>dot(j2T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j2A )
+
+<span style="color: #408080; font-style: italic">#jbg.drawLink(ax, j1A, j2A, width=25 )</span>
+
+j3T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j3_theta <span style="color: #666666">+</span> thetas[<span style="color: #666666">2</span>], j3_dp, j3_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+
+j3A <span style="color: #666666">=</span> j2A<span style="color: #666666">.</span>dot(j3T)
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.25</span>, <span style="color: #666666">2.0</span>, j3A )
+
+<span style="color: #408080; font-style: italic">#Breaking Denavit Hartenberg Convention</span>
+j4Td <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta, j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )
+j4T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( j4_theta <span style="color: #666666">+</span> thetas[<span style="color: #666666">3</span>], j4_dp, j4_ap, <span style="color: #666666">0.0/180.0</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi )<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_y(<span style="color: #666666">90.0/180.0*</span>math<span style="color: #666666">.</span>pi))<span style="color: #666666">.</span>dot(jbg<span style="color: #666666">.</span>rotate_x( math<span style="color: #666666">.</span>atan2( <span style="color: #666666">-</span>j4_a, j4_d ) ) )
+
+j4A <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot(j4T)
+j4Ad <span style="color: #666666">=</span> j3A<span style="color: #666666">.</span>dot( j4Td )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">2.0</span>, j4A )
+<span style="color: #408080; font-style: italic">#jbg.plot_coordinate_system( ax, 0.15, 2.0, j4Ad )</span>
+
+j5T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">90/180.0*</span>math<span style="color: #666666">.</span>pi <span style="color: #666666">+</span> thetas[<span style="color: #666666">4</span>], j5_d, <span style="color: #666666">0</span>, <span style="color: #666666">-90.0/180.0*</span>math<span style="color: #666666">.</span>pi )
+j5A <span style="color: #666666">=</span> j4A<span style="color: #666666">.</span>dot( j5T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">3.0</span>, j5A )
+
+j6T <span style="color: #666666">=</span> jbg<span style="color: #666666">.</span>DHH( <span style="color: #666666">-90/180.0*</span>math<span style="color: #666666">.</span>pi <span style="color: #666666">+</span> thetas[<span style="color: #666666">5</span>], <span style="color: #666666">0</span>, j6_d, <span style="color: #666666">0</span> )
+j6A <span style="color: #666666">=</span> j5A<span style="color: #666666">.</span>dot( j6T )
+
+jbg<span style="color: #666666">.</span>plot_coordinate_system( ax, <span style="color: #666666">0.15</span>, <span style="color: #666666">5.0</span>, j6A )
+
+fig8<span style="color: #666666">=</span>addJBFigure(<span style="color: #BA2121">&quot;fig8&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+</pre></div>
+
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+<div class="jb-output-code jb-render">
+<div style="font-size:0.5em"><!-- start of style="font-size:0.5em" -->
+<div id='4a6924ab-5a80-43c6-81bf-93521e5eecf5'></div>
+</div><!-- end of style="font-size:0.5em" -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-4a3c2022-a4dd-43fd-b567-e086dca8ed1b" ><span id="id-4a3c2022-a4dd-43fd-b567-e086dca8ed1b"><img id="img-id-4a3c2022-a4dd-43fd-b567-e086dca8ed1b"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-6bd4a667-874b-41f2-8727-36333ab500e5" ><span id="id-6bd4a667-874b-41f2-8727-36333ab500e5"><img id="img-id-6bd4a667-874b-41f2-8727-36333ab500e5" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00039_frag_00001" data-state="slide_00039_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Forward Kinematics for Left Arm</h1>
+<div style="font-size:0.5em">
+<code>thetas = [' 0.00', '90.00', ' 0.00', ' 0.00', ' 0.00', ' 0.00']</code>
+</div>
+
+<span id="id-0dcca79b-76db-4b9d-8aed-a12062217e24" ><span id="id-0dcca79b-76db-4b9d-8aed-a12062217e24"><img id="img-id-0dcca79b-76db-4b9d-8aed-a12062217e24"     src="assets/images/fig8.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-5ad25c15-39e5-4d10-a82e-70d0a63c51f3" ><span id="id-5ad25c15-39e5-4d10-a82e-70d0a63c51f3"><img id="img-id-5ad25c15-39e5-4d10-a82e-70d0a63c51f3"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-d1da4e66-8deb-49f1-ab79-b201cfa24b90" ><span id="id-d1da4e66-8deb-49f1-ab79-b201cfa24b90"><img id="img-id-d1da4e66-8deb-49f1-ab79-b201cfa24b90" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+        </div>
+        </div>
+
+        <script src="js/reveal.js"></script>
+
+        <script>
+            // More info about config & dependencies:
+            // - https://github.com/hakimel/reveal.js#configuration
+            // - https://github.com/hakimel/reveal.js#dependencies
+            Reveal.initialize({
+                math: {
+                    mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+                    config: 'TeX-AMS_HTML-full',  // See http://docs.mathjax.org/en/latest/config-files.html
+                    // tex2jax: {
+                    //     inlineMath: [['$', '$'], ['\(', '\)']],
+                    //     displayMath: [['$$', '$$'], ['\[', '\]']],
+                    //     processEscapes: true,
+                    //     processEnvironments: true,
+                    //     skipTags: ['script', 'noscript', 'style', 'textarea', 'code', 'pre'],
+                    //     displayAlign: 'center',
+                    // }                
+                },
+                dependencies: [
+                    { src: 'plugin/markdown/marked.js' },
+                    { src: 'plugin/markdown/markdown.js' },
+                    { src: 'plugin/notes/notes.js', async: true },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/math/math.js', async: true }
+                ]
+            });
+        </script>
+
+        <script>
+            <!-- Assets -->
+var assets = {
+"robbi" : new JBImage( "robbi", "12677", "162", "138", null, null, "assets/images/robbi", "png" ),
+"logo" : new JBImage( "logo", "12033", "0", "0", null, null, "assets/images/logo", "png" ),
+"fira-logo-1" : new JBImage( "fira-logo-1", "93836", "0", "0", null, null, "assets/images/FIRA-logo-1", "png" ),
+"pairLogo" : new JBImage( "pairLogo", "63051", "0", "0", null, null, "assets/images/pairLogo", "png" ),
+"thor1" : new JBImage( "thor1", "100093", "0", "0", "http://emanual.robotis.com/assets/images/platform/thormang3/thormang3_005.jpg", null, "assets/images/thor1", "jpg" ),
+"thor2" : new JBImage( "thor2", "183468", "0", "0", "https://i.postimg.cc/Pf0gZV2X/image.png", null, "assets/images/thor2", "png" ),
+"fig1" : new JBImage( "fig1", "24042", "0", "0", null, null, "assets/images/fig1", "svg" ),
+"fig2" : new JBImage( "fig2", "18852", "0", "0", null, null, "assets/images/fig2", "svg" ),
+"fig3" : new JBImage( "fig3", "21160", "0", "0", null, null, "assets/images/fig3", "svg" ),
+"fig5" : new JBImage( "fig5", "21119", "0", "0", null, null, "assets/images/fig5", "svg" ),
+"fig7" : new JBImage( "fig7", "22306", "0", "0", null, null, "assets/images/fig7", "svg" ),
+"fig8" : new JBImage( "fig8", "22300", "0", "0", null, null, "assets/images/fig8", "svg" ) 
+};
+var assetInstances = {
+    "id-b9062622-050c-4305-8b73-7528b2a31417": assets["robbi"],
+    "id-3cf3f894-ba62-4842-97c4-66ded3a7e5a1": assets["robbi"],
+    "id-de6b1a89-0bfe-4ccf-a219-2403776a20d8": assets["robbi"],
+    "id-bb3389da-3e34-47be-8e83-cf7512e7286f": assets["robbi"],
+    "id-839c176e-f7af-43a5-b7c9-c7bd6f22d445": assets["robbi"],
+    "id-dc630566-bfd5-42c0-b6f0-3e4d0d997840": assets["robbi"],
+    "id-6a2f8eca-b0c3-415b-b9ca-9481ac8234e5": assets["robbi"],
+    "id-205ff0c3-1979-4b97-8791-6e864dd9a0d1": assets["robbi"],
+    "id-2a20eda3-5e98-4d60-9462-256dc2b1a5c4": assets["robbi"],
+    "id-7e9072b5-f8cb-4510-9833-f776836c4c3c": assets["robbi"],
+    "id-5fed3cea-c39e-4f54-81a1-0270ae1f077b": assets["robbi"],
+    "id-eabff8f2-9558-405f-b4e5-84f1538fe73b": assets["robbi"],
+    "id-f21152b4-0bf1-4790-9368-dff0dfdd23b5": assets["robbi"],
+    "id-b0493322-e011-44cd-86c5-90fa29abfa33": assets["robbi"],
+    "id-af39ad5d-7cbe-4c4e-bced-a1cadb745dda": assets["robbi"],
+    "id-0720d2bd-3755-4e3f-8ab1-89e6f438ba22": assets["robbi"],
+    "id-c716a858-041e-4c7e-bd08-46d171428b30": assets["robbi"],
+    "id-5681b5f6-b16a-4174-b1a0-659eff0cdec2": assets["robbi"],
+    "id-d1a47acc-9961-4607-9a33-57e3121d4cff": assets["robbi"],
+    "id-216f88da-2889-4086-b792-e257a62f7404": assets["robbi"],
+    "id-c7cf0116-88ef-4673-83a9-cedd4faef255": assets["robbi"],
+    "id-5a04efb0-ff90-4ae9-ae9c-de732cd91427": assets["robbi"],
+    "id-9d44a00e-9748-4706-a3cb-b8441bba620c": assets["robbi"],
+    "id-17ad0679-da88-446b-bfec-24a92b0b1a88": assets["robbi"],
+    "id-b01580f1-2920-4713-a498-e21a5b71d88d": assets["robbi"],
+    "id-5b1bc45f-c8e5-4ac4-afef-4d13ce26c6e8": assets["robbi"],
+    "id-978846a8-440a-4301-a453-5d6672a83066": assets["robbi"],
+    "id-32f3b8cd-a931-4079-a899-1569a3da896c": assets["robbi"],
+    "id-5cc73578-912f-4428-bdd1-d8f4e7aa7809": assets["robbi"],
+    "id-cd7ced79-2796-4b38-a6a4-7effaa724510": assets["robbi"],
+    "id-825831aa-3bab-4a6b-8199-ff3fd877168f": assets["robbi"],
+    "id-c7c3a068-17f8-42f5-9bad-f2ac6548fd49": assets["robbi"],
+    "id-a306cd77-4082-444c-94ab-58e50966d70b": assets["robbi"],
+    "id-8bd3fc67-de8e-423f-bfad-4b1e1c2f17c4": assets["robbi"],
+    "id-14d88bcb-b290-4495-a987-a8274a38238b": assets["robbi"],
+    "id-a186b8ba-4e7a-43ac-bbb6-c03e1e68ce3f": assets["robbi"],
+    "id-6bd4a667-874b-41f2-8727-36333ab500e5": assets["robbi"],
+    "id-d1da4e66-8deb-49f1-ab79-b201cfa24b90": assets["robbi"],
+    "id-8efac9fa-1544-4b28-8ed4-2dd79585027d": assets["logo"],
+    "id-ba9945b1-a71f-427e-b514-b1d516eb4a1d": assets["logo"],
+    "id-96c98c6c-b904-48f2-b069-6bc48ae383bf": assets["logo"],
+    "id-12d78b73-7a5b-4cf6-9d67-879998083567": assets["logo"],
+    "id-6e59cdff-0562-413d-8b89-42dddb2c58f4": assets["logo"],
+    "id-28b72d41-2c9b-43df-9bcf-05527da8eb64": assets["logo"],
+    "id-b3e2baac-8a52-4c43-9a1f-a59304a854d9": assets["logo"],
+    "id-8ef1aab6-f086-46a7-a9f7-5bcf3de266b8": assets["logo"],
+    "id-d4709999-0268-476b-bde1-28b64e6b4284": assets["logo"],
+    "id-c81458ba-ec86-493c-bb58-f61a607dfc4d": assets["logo"],
+    "id-3f989fc2-c949-4338-9279-b80bbd6701c9": assets["logo"],
+    "id-969a0a78-d55e-434f-b38f-cef23f39977b": assets["logo"],
+    "id-d4a404f5-6b57-4ebd-8bd6-3c4c18b84d5c": assets["logo"],
+    "id-c5d2c068-964e-480d-9354-2d399ff2f6f2": assets["logo"],
+    "id-b49b7117-2f71-49e2-a8a3-68f3fdc674fe": assets["logo"],
+    "id-6f3a0a59-c117-4c65-a8bd-e5aaa5c9a99e": assets["logo"],
+    "id-dfe4f472-f3e9-4255-87a1-ecfb04657ac9": assets["logo"],
+    "id-7fc5e5d8-d1eb-4466-833f-62209c816a43": assets["logo"],
+    "id-dd86eda5-e245-44d1-bc84-f29bfb9a64dc": assets["logo"],
+    "id-c508a848-742c-4e3d-96a0-8c4ebbcccae2": assets["logo"],
+    "id-6adab6c8-0edf-43ed-aa01-1a0aecb919fd": assets["logo"],
+    "id-e3e6f57a-b266-465a-bb15-66fe1a270064": assets["logo"],
+    "id-1b63266f-8fd3-496e-95a4-9e6c9577e15d": assets["logo"],
+    "id-f2bef5f4-cb3f-4b8b-9d05-314b2228abe1": assets["logo"],
+    "id-c31d43f5-6267-433e-97eb-6eaa531b69f0": assets["logo"],
+    "id-a00437c2-48af-48b7-9440-09650c2766bc": assets["logo"],
+    "id-994661b4-0960-4b63-aa69-5ac3c8b2a156": assets["logo"],
+    "id-df0a1294-e31c-41fa-b43e-8ecd0cff81a0": assets["logo"],
+    "id-e513b489-82dd-421e-83bc-392c973cc0b3": assets["logo"],
+    "id-72d47dce-ee9b-4ed4-b416-efe538c160a8": assets["logo"],
+    "id-7707a349-37dc-41ec-acaa-62961fb2f81b": assets["logo"],
+    "id-a4b80b38-ef4e-436a-806e-c4d359e723e7": assets["logo"],
+    "id-f4e2fe8d-5760-43a8-a7ce-814705136b86": assets["logo"],
+    "id-553baee3-3f22-47ec-9a86-e56b8b2e65a0": assets["logo"],
+    "id-75ba4ca6-71a4-43a5-aeca-58270afb3234": assets["logo"],
+    "id-6f5f19c2-b8b2-4554-89e9-d3de41732b68": assets["logo"],
+    "id-4a3c2022-a4dd-43fd-b567-e086dca8ed1b": assets["logo"],
+    "id-5ad25c15-39e5-4d10-a82e-70d0a63c51f3": assets["logo"],
+    "id-34e75415-079e-48d2-8bd9-b42180d6c161": assets["thor1"],
+    "id-a45d86b4-2d12-4ec7-8c07-a2acece911ba": assets["thor2"],
+    "id-9bb814f8-f03c-4d69-9f3a-c926e03cf1fb": assets["thor2"],
+    "id-46fe7bbd-f4cb-4bde-8281-89f3dea0b8e4": assets["thor2"],
+    "id-acbfde70-cb0a-434f-b315-fcbf6e9ff9a5": assets["thor2"],
+    "id-5d0c9929-17ed-46be-ba3f-68615e663106": assets["thor2"],
+    "id-05d792b2-da9b-4309-9472-a9bfda73d5b5": assets["fig1"],
+    "id-048bafb4-c29d-48a7-8dce-5914cc1b226f": assets["fig2"],
+    "id-fbcfd282-80b0-4a37-b63d-978768d12241": assets["fig2"],
+    "id-83a15591-d8dc-4f2e-9993-6906639f286f": assets["fig3"],
+    "id-987785e3-7c93-417d-88f0-0f735a9ab732": assets["fig5"],
+    "id-9fa158d3-21d2-45aa-95c8-b56da4137123": assets["fig7"],
+    "id-0dcca79b-76db-4b9d-8aed-a12062217e24": assets["fig8"]
+};
+<!-- End of Assets -->
+
+            convertURLs(assetInstances, "smart-path");
+        </script>
+        <script>
+            <!-- Characters -->
+var characters =
+{};
+<!-- End of Characters -->
+
+        </script>
+    </body>
+</html>
